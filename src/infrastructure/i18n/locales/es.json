@@ -75,8 +75,7 @@
         "errors": {
           "emailRequired": "Por favor introduzca un correo válido",
           "passwordRequired": "Por favor introduzca una contraseña válida",
-          "passwordConfirmation": "Las contraseñas no coinciden",
-          "invalidcredentials": "Credenciales inválidas: {{msg}}"
+          "passwordConfirmation": "Las contraseñas no coinciden"
         },
         "signup": "Registro"
       }
@@ -114,7 +113,7 @@
         "viewMore": "Ver más",
         "public": "Experimentos públicos",
         "myexperiments": "Mis experimentos",
-        "executionCompleted": "Ejecución del experimento {{name}} completada",
+        "executionCompleted": "Ejecución del experimento {{mame}} completada",
         "executionCompletedDescription": "Haga click sobre el título de la notificación para ver los detalles"
       },
       "function_category": {
@@ -672,7 +671,6 @@
         "published": "Publicado",
         "unpublished": "No publicado",
         "author": "Autor",
-        "identifier": "Identificador del experimento",
         "copyLink": "Copiar enlace",
         "experiment": "Experimento",
         "success": "exitosamente",

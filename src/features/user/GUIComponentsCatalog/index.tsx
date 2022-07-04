@@ -140,9 +140,10 @@ const GUIComponentsCatalog: React.FC<GUIComponentsCatalogProps> = (props) => {
       <CreateGUIComponentForm
         onSubmit={ async (guiComponentData: any) => {
           console.log('TODO: handle gui component creation form submit', guiComponentData);
-          const isNewComponent = typeof (initialValues as any).id === 'number';
+          const componentId = ((initialValues || {})as any).id;
+          const isNewComponent = typeof componentId === 'number';
           const result = await guiComponentRepository.save(guiComponentData, token ?? '');
-          const guiComponent = guiComponentDTOToGUIComponent(await guiComponentRepository.get(result.id, token ?? ''));
+          const guiComponent = guiComponentDTOToGUIComponent(await guiComponentRepository.get(result.id || componentId , token ?? ''));
 
             // temp method to add and display saved gui-component
           if (isNewComponent) {

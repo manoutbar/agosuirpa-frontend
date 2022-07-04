@@ -33,7 +33,12 @@ const CreateGUIComponentForm: React.FC<CreateGUIComponentFormProps> = ({ onSubmi
   const { token } = useSelector(authSelector);
   const { register, formState, handleSubmit, getValues, setValue, setError, clearErrors } = useForm();
 
+  console.log('initialValues', initialValues);
+
   const thumbnailField = register('thumbnail');
+  register('category', {
+    value: initialValues.category,
+  })
 
   const validateForm = (data: any) => {
     let valid = true;
@@ -62,8 +67,17 @@ const CreateGUIComponentForm: React.FC<CreateGUIComponentFormProps> = ({ onSubmi
 
     const formData = objectToFormData(data, {});
 
-    formData.set('image', formData.get('thumbnail') ?? '');
-    formData.delete('thumbnail');
+    if (typeof initialValues.id === 'number') {
+      formData.set('id', initialValues.id);
+    }
+
+    if (formData.get('thumbnail') == null) {
+      formData.set('path', initialValues.path);
+      formData.set('filename', initialValues.filename);
+    } else {
+      formData.set('image', formData.get('thumbnail') ?? '');
+      formData.delete('thumbnail');
+    } 
 
     // formData.set('gui_component_category', JSON.stringify({ id: parseInt(categoryId) }));
     formData.set('gui_component_category', formData.get('category') ?? '');
@@ -106,9 +120,12 @@ const CreateGUIComponentForm: React.FC<CreateGUIComponentFormProps> = ({ onSubmi
               register('id_code', {
                 value: initialValues.idCode,
                 validate: async(value) => {
-                  const existsResponse = await repository.checkIdCode(value, token ?? '');
-                  console.log('validate id_code', value, 'exists', existsResponse);
-                  return !existsResponse.exists || t('features.user.gui-components.form.errors.idCodeMustBeUnique') as string;
+                  if (typeof initialValues.id !== 'number') {
+                    const existsResponse = await repository.checkIdCode(value, token ?? '');
+                    console.log('validate id_code', value, 'exists', existsResponse);
+                    return !existsResponse.exists || t('features.user.gui-components.form.errors.idCodeMustBeUnique') as string;
+                  }
+                  return true;
                 }
               })
             }
