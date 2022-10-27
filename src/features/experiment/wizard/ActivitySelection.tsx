@@ -24,6 +24,56 @@ export interface ExperimentFormProperties {
   initialValues?: any
 }
 
+const VariantActivitiesTable: (seed: any, t: any) => (entry: any) => JSX.Element = (seed, t) => (entry) => {
+  const [ variant, acts ] = entry;
+
+  return (
+  <Table sx={{ minWidth: 650 }} key={`${entry[0]}`} aria-label="variant activity selection">
+    <TableHead>
+      <TableRow key="headers">
+        <TableCell align="center">{`${t("features.wizard.activitySelection.variant")} ${entry[0]}`}</TableCell>
+        <TableCell>{t("features.wizard.activitySelection.variate")}</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      { 
+        Object.keys(acts).map(act => (
+          <TableRow
+            key={`${variant}-${act}`}
+            sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+          >
+            <TableCell align="center">
+              <Button
+                variant="contained"
+                component={RouterLink}
+                to={`${configuration.PREFIX}/column-variability/${variant}/${act}`}
+              >
+                {t("features.wizard.activitySelection.activity")} {act}
+              </Button>
+            </TableCell>
+            <TableCell>
+              {Object.keys(seed[variant][act]).some(column => seed[variant][act][column]['variate'] === 1) && (
+                <div>
+                  {t("features.wizard.activitySelection.configured")}
+                  {/* <DoneIcon />Variability configured */}
+                </div>
+              )}
+
+              {!Object.keys(seed[variant][act]).some(column => seed[variant][act][column]['variate'] === 1) && (
+                <div>
+                  {t("features.wizard.activitySelection.not_configured")}
+                  {/* <CloseIcon /> Variability not configured */}
+                </div>
+              )}
+            </TableCell>
+          </TableRow>
+        )) 
+      }
+    </TableBody>
+  </Table>
+  );
+}
+
 const ExperimentAssist: React.FC = () => {
   const { t } = useTranslation();
   const { seed, category_gui_components } = useSelector(wizardSelector);
@@ -44,43 +94,6 @@ const ExperimentAssist: React.FC = () => {
     }
   }, []);
 
-  const variantActivities = (entry: any) => {
-    let variant = entry[0];
-    let acts = entry[1];
-
-    return Object.keys(acts).map(act => (
-      <TableRow
-        key={`${variant}-${act}`}
-        sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-      >
-        <TableCell align="center">
-          <Button
-            variant="contained"
-            component={RouterLink}
-            to={`${configuration.PREFIX}/column-variability/${variant}/${act}`}
-          >
-            {t("features.wizard.activitySelection.activity")} {act}
-          </Button>
-        </TableCell>
-        <TableCell>
-          {Object.keys(seed[variant][act]).some(column => seed[variant][act][column]['variate'] === 1) && (
-            <div>
-              {t("features.wizard.activitySelection.configured")}
-              {/* <DoneIcon />Variability configured */}
-            </div>
-          )}
-
-          {!Object.keys(seed[variant][act]).some(column => seed[variant][act][column]['variate'] === 1) && (
-            <div>
-              {t("features.wizard.activitySelection.not_configured")}
-              {/* <CloseIcon /> Variability not configured */}
-            </div>
-          )}
-        </TableCell>
-      </TableRow>
-    ))
-  };
-
   return (
     <div>
       <Typography variant="h5">
@@ -90,19 +103,8 @@ const ExperimentAssist: React.FC = () => {
       <Paper sx={{ width: '70%', overflow: 'hidden', margin: 'auto' }}>
         <TableContainer sx={{ maxHeight: '100%' }}>
           {
-            Object.entries(seed).map(entry => (
-              <Table sx={{ minWidth: 650 }} key={`${entry[0]}`} aria-label="variant activity selection">
-                <TableHead>
-                  <TableRow key="headers">
-                    <TableCell align="center">{`${t("features.wizard.activitySelection.variant")} ${entry[0]}`}</TableCell>
-                    <TableCell>{t("features.wizard.activitySelection.variate")}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {variantActivities(entry)}
-                </TableBody>
-              </Table>
-            ))}
+            seed != null && Object.entries(seed).map(VariantActivitiesTable(seed, t))
+          }
         </TableContainer>
         <DownloadButton filename='case_variability_configuration' scenario_variability_mode={false} />
       </Paper>

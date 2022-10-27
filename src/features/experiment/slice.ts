@@ -148,8 +148,7 @@ export const saveExperiment = (experimentData: any, actionFinishedCallback: Func
       }
     }
 
-    if (!hasPreviousId && experimentResponse.id != null) {
-      if(experimentResponse.status === "PRE_SAVED") {
+    if (experimentResponse.id != null && experimentResponse.status === "PRE_SAVED") {
         const { case_conf, scenario_conf } = csvLogToJSON(seedLog, experimentData.get("special_colnames"))
         dispatch(
           setExperiment({
@@ -158,17 +157,20 @@ export const saveExperiment = (experimentData: any, actionFinishedCallback: Func
         }))
         dispatch(wizardSlice.actions.setVariabilityConfiguration(case_conf))
         dispatch(wizardSlice.actions.setScenarioConfiguration(scenario_conf))
-      } else {
-        const { experiments, pagination } = experiment;
-        dispatch(setExperiments({
-          experiments: [typedExperiment].concat(experiments),
-          pagination,
-        }));
-      } 
-    } else {
-      dispatch(setExperimentInList(typedExperiment));
     }
+
+    if (hasPreviousId) { // update in list
+      dispatch(setExperimentInList(typedExperiment));
+    } else { // add to list
+      const { experiments, pagination } = experiment;
+      dispatch(setExperiments({
+        experiments: [typedExperiment].concat(experiments),
+        pagination,
+      }));
+    }
+
     actionFinishedCallback != null && actionFinishedCallback(experimentResponse.status, null);
+
     } catch (error) {
       dispatch(setError(error as ExperimentError))
       let exception = error;
