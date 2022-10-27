@@ -6,15 +6,15 @@ import DownloadIcon from '@mui/icons-material/Download';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import LinkIcon from '@mui/icons-material/Link';
 import configuration from "infrastructure/util/configuration";
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 import { ThemeContext } from '@emotion/react';
 import { authSelector } from 'features/auth/slice';
 
 import BackButton from 'components/BackButton';
-import { experimentsSelector, addExperiment, saveExperiment, experimentRepository, experimentsSlice} from './slice';
+import { experimentsSelector, saveExperiment, experimentRepository, setExperimentDetail } from './slice';
 import { experimentDTOToExperimentType, downloadFile, copyTextToClipboard, experimentToFormData } from './utils';
 import ExperimentFormComponent from './Form';
-import { ExperimentState } from './types';
+import { Experiment, ExperimentState } from './types';
 import NotificationFactory from 'features/notifications/notification';
 import { showNotification } from 'features/notifications/slice';
 
@@ -51,12 +51,11 @@ const ChipProperty = styled(Chip)(({ theme }) => ({
 const ExperimentDetails: React.FC = () => {
   const { t } = useTranslation();
   const theme = useContext(ThemeContext) as Theme;
-  const { experiments } = useSelector(experimentsSelector);
-  const { token } = useSelector(authSelector);
+  const { experiments, detail } = useSelector(experimentsSelector);
+  const auth = useSelector(authSelector);
   const { id } = useParams<{ id: string }>();
   const [experiment, setExperimentInList]: any = useState(null);
   const [loading, setLoading]: any = useState(false);
-  const [owned, setOwned]: any = useState(false);
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -66,12 +65,16 @@ const ExperimentDetails: React.FC = () => {
         const idParam = parseInt(id, 10);
         setLoading(true)
         setExperimentInList(null);
-        let experimentDetail = experiments.find((exp) => exp.id === idParam);
+        let experimentDetail = null;
+        if (detail != null && detail.id === idParam) {
+          experimentDetail = detail;
+        } else if (experiments.length > 0) {
+          experimentDetail = experiments.find((exp) => exp.id === idParam);
+        }
         if (experimentDetail == null) {
-          const response = await experimentRepository.get(idParam, token ?? '');
-          setOwned(response.owned)
-          experimentDetail = experimentDTOToExperimentType(response.experiment);
-          dispatch(addExperiment)
+          const response = await experimentRepository.get(idParam, auth.token ?? '');
+          experimentDetail = experimentDTOToExperimentType(response.experiment, auth.currentUser);
+          dispatch(setExperimentDetail(experimentDetail))
         }
         setExperimentInList(experimentDetail);
       } catch (ex) {
@@ -80,14 +83,14 @@ const ExperimentDetails: React.FC = () => {
         setLoading(false)
       }
     })();
-  }, [id,token]);
+  }, [id, auth.token]);
 
-
+  const backPath = (experiment == null || !experiment.owned ? 'public' : '');
 
   return (
     <>
       <Typography variant="h4">
-        <BackButton to={`${configuration.PREFIX}/public`} />
+        <BackButton to={`${configuration.PREFIX}/${backPath}`} />
         {t('features.experiment.details.title')}
       </Typography>
 
@@ -105,9 +108,9 @@ const ExperimentDetails: React.FC = () => {
         <ExperimentFormComponent
           initialValues={experiment}
           onSubmit={(data: any) => {
-            console.log('Edit component data received:', data);
             const variability_mode = data.get('variability_mode');
             data.set('id', id);
+            setLoading(true);
             dispatch(saveExperiment(data, (status: string, error: any) => {
               setLoading(false);
               if (error == null) {
@@ -126,6 +129,7 @@ const ExperimentDetails: React.FC = () => {
               }
               }));
           }}
+          disabled={ loading }
         />
       )}
 
@@ -136,7 +140,7 @@ const ExperimentDetails: React.FC = () => {
               <Grid item>
                 <Typography variant="h6">{experiment.name}</Typography>
               </Grid>
-              { owned &&
+              { experiment.owned &&
                 <Grid item>
                   <label>{t('features.experiment.details.published')}</label>
                   <Switch
@@ -148,7 +152,7 @@ const ExperimentDetails: React.FC = () => {
                       experimentData.set('public', newValue);
                       dispatch(saveExperiment(experimentData, () => {
                         const notification = NotificationFactory.success(
-                            t('features.experiment.details.experiment') + `${experiment.name}` + t('features.experiment.details.success') + `${newValue ? t('features.experiment.details.publish') : t('features.experiment.details.unpublish')}`
+                            t('features.experiment.details.experiment') + ` ${experiment.name} ` + t('features.experiment.details.success') + ` ${newValue ? t('features.experiment.details.publish') : t('features.experiment.details.unpublish')}`
                           )
                           .dismissible()
                           .build();
@@ -286,7 +290,7 @@ const ExperimentDetails: React.FC = () => {
                 <Fab
                   variant="extended"
                   color="secondary"
-                  onClick={() => downloadResults(experiment.id, token ?? '')}
+                  onClick={() => downloadResults(experiment.id, auth.token ?? '')}
                 >
                   <DownloadIcon sx={{ mr: 1 }} />
                   {t('features.experiment.list.downloadResults')}

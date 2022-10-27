@@ -27,13 +27,14 @@ const FlexDiv = styled('div')(({ theme }) => ({
 
 const viewInitialState = {
   loading: false,
-  page: 0,
+  page: 1,
   hasNext: false,
   list: [],
   error: null,
 };
 
 function reducer(state: any, action: any) {
+  console.log('public exp reducer', state, action);
   switch (action.type) {
     case 'load':
       return { 
@@ -70,20 +71,20 @@ const PublicExperimentsList: React.FC = () => {
   const { t } = useTranslation();
 
   const loadExperiments = async () => {
+    console.log('public load experiments');
     // first page already loaded
     if (state.page === 0 && state.list.length > 0) {
       return false;
     }
     dispatch({ type: 'load' });
-    const page: number = state.hasNext ? state.page + 1 : state.page;
     try {
-      const response = await experimentRepository.findPublic(page, "");
+      const response = await experimentRepository.findPublic(state.page, "");
       const list = response.results.map((exp: ExperimentDTO) => experimentDTOToExperimentType(exp));
       dispatch({
         type: 'load_success',
         payload: {
           list: state.list.concat(list),
-          page: page,
+          page: response.next ? state.page + 1 : state.page,
           hasNext: response.next != null
         }
       })

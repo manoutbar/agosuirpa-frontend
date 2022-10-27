@@ -2,6 +2,7 @@ import { ExperimentDTO } from 'infrastructure/http/dto/experiment';
 import { Experiment, ExperimentState } from './types';
 import Papa from 'papaparse';
 import { objectToFormData } from 'infrastructure/util/form';
+import { User } from 'features/user/types';
 
 export const downloadFile = function downloadFile(filename: string, blob: Blob) {
   const url = window.URL.createObjectURL(new Blob([blob]));
@@ -18,7 +19,7 @@ export function getByID(obj: any, idO: number) {
   return obj.find((o: { id: number; }) => (o.id === idO) ? o : null)
 }
 
-export function experimentDTOToExperimentType(experiment: ExperimentDTO): Experiment {
+export function experimentDTOToExperimentType(experiment: ExperimentDTO, auth?: User): Experiment {
   let state: ExperimentState;
   if (experiment.is_being_processed === 0) {
     state = ExperimentState.NOT_LAUNCHED
@@ -26,6 +27,11 @@ export function experimentDTOToExperimentType(experiment: ExperimentDTO): Experi
     state = ExperimentState.CREATED;
   } else {
     state = ExperimentState.CREATING;
+  }
+
+  let author = experiment.user?.email;
+  if (experiment.user?.first_name !== '' || experiment.user?.last_name !== '') {
+    author = `${experiment.user.first_name} ${experiment.user.last_name}`.trim();
   }
 
   return {
@@ -49,7 +55,8 @@ export function experimentDTOToExperimentType(experiment: ExperimentDTO): Experi
     specialColnames: experiment.special_colnames ?? '',
     status: '',
     isPublic: experiment.public,
-    author: experiment.user != null ? `${experiment.user.first_name} ${experiment.user.last_name}` : undefined
+    author,
+    owned: (experiment.user != null && auth != null) ? experiment.user.email === auth.email : false,
   }
 }
 

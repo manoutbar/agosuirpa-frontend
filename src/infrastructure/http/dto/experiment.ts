@@ -19,6 +19,7 @@ export interface ExperimentDTO {
   size_balance: any
   status: string
   user?: any
+  owned?: boolean
 }
 
 export interface ExperimentDetail {

@@ -50,7 +50,10 @@ const ExperimentsList: React.FC = () => {
       .forEach(exp => {
         experimentStatusChecker.checkExperimentStatus(
           exp, 
-          (expData: any) => dispatch(setExperimentInList(expData)),
+          (expData: any) => {
+            console.log('experimentData', expData);
+            dispatch(setExperimentInList(expData));
+          },
           token ?? '',
           (experiment: any) => {
             const notification = NotificationFactory.success(t('features.experiment.list.executionCompleted', { name: experiment.name }), t('features.experiment.list.executionCompletedDescription'), `${configuration.PREFIX}/experiment/${experiment.id}`)
@@ -58,6 +61,7 @@ const ExperimentsList: React.FC = () => {
               .build();
 
             setTimeout(() => {
+              dispatch(showNotification(notification));
               dispatch(showNotification(notification));
             }, 0)
           } 
@@ -90,7 +94,7 @@ const ExperimentsList: React.FC = () => {
       </FlexDiv>
 
       <List
-        loadMoreFn={ () => loadExperiments() }
+        loadMoreFn={ () => dispatch(loadExperiments()) }
         loadMoreDisabled={ experiments.length > 0 && !pagination.hasNext }
         isLoading={ isLoading }
         experiments={ experiments }

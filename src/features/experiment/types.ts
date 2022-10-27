@@ -26,6 +26,7 @@ export interface Experiment {
   status: string | null
   isPublic: boolean
   author?: string
+  owned: boolean
 }
 
 export interface ExperimentError {

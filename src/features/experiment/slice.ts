@@ -93,7 +93,7 @@ export const loadExperiments = (): AppThunk => async (dispatch: AppDispatch, get
     if (experimentResponse.count !== experiment.experiments.length) {
       dispatch(addExperiments({
         experiments: experimentResponse.results
-          .map((exp: ExperimentDTO, i) => experimentDTOToExperimentType(exp))
+          .map((exp: ExperimentDTO, i) => experimentDTOToExperimentType(exp, auth.currentUser))
           .filter((exp, i, ls) => ls.findIndex(e => e.id === exp.id) === i),
         pagination: {
           page: currentPage + (experimentResponse.next != null ? 1 : 0),
@@ -119,6 +119,15 @@ export const addExperiment = (experimentOb: Experiment): AppThunk => async (disp
   }
 }
 
+export const setExperimentDetail = (experimentOb: Experiment): AppThunk => async (dispatch: AppDispatch, getState) => {
+  const { experiment } = getState();
+  dispatch(setExperiment({
+    detail: experimentOb,
+    seed_log: null
+  }))
+}
+
+
 export const saveExperiment = (experimentData: any, actionFinishedCallback: Function|null): AppThunk => async (dispatch: AppDispatch, getState) => {
   const { auth, experiment } = getState();
   const hasPreviousId = experimentData.get("id") != null;
@@ -132,7 +141,7 @@ export const saveExperiment = (experimentData: any, actionFinishedCallback: Func
   experimentData.delete('execute_mode');
 
   try {
-    const experimentResponse = await experimentRepository.save(experimentData, auth.token ?? '');
+    let experimentResponse = await experimentRepository.save(experimentData, auth.token ?? '');
     const savedExperimentData = await experimentRepository.get(experimentResponse.id || experimentData.get("id"), auth.token ?? '');
     const typedExperiment = experimentDTOToExperimentType(savedExperimentData.experiment);
 
@@ -142,12 +151,12 @@ export const saveExperiment = (experimentData: any, actionFinishedCallback: Func
       try {
         experimentRepository.save(experimentData, auth.token ?? '');
         typedExperiment.state = ExperimentState.CREATING;
+        experimentResponse.status = "LAUNCHED"; // forced status to send user to list view
       } catch (ex) {
         console.error('error during project execution', ex);
         throw ex;
       }
     }
-
     if (experimentResponse.id != null && experimentResponse.status === "PRE_SAVED") {
         const { case_conf, scenario_conf } = csvLogToJSON(seedLog, experimentData.get("special_colnames"))
         dispatch(
