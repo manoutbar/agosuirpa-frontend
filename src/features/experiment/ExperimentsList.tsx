@@ -51,7 +51,7 @@ const ExperimentsList: React.FC = () => {
         experimentStatusChecker.checkExperimentStatus(
           exp, 
           (expData: any) => {
-            console.log('experimentData', expData);
+            expData.owned = true;
             dispatch(setExperimentInList(expData));
           },
           token ?? '',
@@ -61,7 +61,6 @@ const ExperimentsList: React.FC = () => {
               .build();
 
             setTimeout(() => {
-              dispatch(showNotification(notification));
               dispatch(showNotification(notification));
             }, 0)
           } 
