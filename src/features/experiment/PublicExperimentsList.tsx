@@ -34,7 +34,6 @@ const viewInitialState = {
 };
 
 function reducer(state: any, action: any) {
-  console.log('public exp reducer', state, action);
   switch (action.type) {
     case 'load':
       return { 
