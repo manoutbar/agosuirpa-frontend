@@ -6,6 +6,7 @@ import { ExperimentDTO } from 'infrastructure/http/dto/experiment';
 import { experimentDTOToExperimentType, csvLogToJSON } from './utils';
 import { wizardSlice } from './wizard/slice';
 import ExperimentStatusChecker from './ExperimentStatusChecker';
+import { Details } from '@mui/icons-material';
 
 export const experimentRepository = new ExperimentRepository();
 
@@ -53,6 +54,9 @@ export const experimentsSlice = createSlice({
       const index = state.experiments.findIndex((exp) => exp.id === payload.id);
       if (index !== -1) {
         state.experiments[index] = payload;
+        if (state.detail != null && state.detail.id === payload.id) {
+          state.detail = payload;
+        }
       }
     },
     setExperiment: (

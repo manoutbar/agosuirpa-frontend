@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { experimentsSelector, experimentStatusChecker, loadExperiments, setExperimentInList } from 'features/experiment/slice';
 import { Link as RouterLink } from 'react-router-dom';
@@ -52,6 +52,7 @@ const ExperimentsList: React.FC = () => {
           exp, 
           (expData: any) => {
             expData.owned = true;
+            expData.state = ExperimentState.CREATED;
             dispatch(setExperimentInList(expData));
           },
           token ?? '',
